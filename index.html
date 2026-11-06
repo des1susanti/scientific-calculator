@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SciCalc — kalkulator saintifik modern berbasis HTML, CSS, dan Vanilla JavaScript." />
+  <meta name="theme-color" content="#060a13" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%234f6ef7'/%3E%3Ctext x='50' y='72' font-size='64' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%88%91%3C/text%3E%3C/svg%3E" />
+  <title>SciCalc — Scientific Calculator</title>
+
+  <!-- Font (opsional, jika offline akan memakai font sistem) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+/* =========================================================
+   SciCalc — Scientific Calculator
+   Tema: Dark Mode + Glassmorphism
+   ========================================================= */
+
+:root {
+  /* Warna dasar */
+  --bg: #060a13;
+  --text: #e8edf6;
+  --text-dim: #8b97ad;
+  --text-faint: #5b667c;
+
+  /* Panel kaca */
+  --glass: rgba(20, 28, 46, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-highlight: rgba(255, 255, 255, 0.07);
+
+  /* Grup tombol */
+  --num-bg: rgba(255, 255, 255, 0.055);
+  --num-bg-hover: rgba(255, 255, 255, 0.10);
+  --num-text: #eef2f9;
+
+  --fn-bg: rgba(56, 189, 248, 0.08);
+  --fn-bg-hover: rgba(56, 189, 248, 0.16);
+  --fn-border: rgba(125, 211, 252, 0.20);
+  --fn-text: #b9e3fb;
+
+  --op-from: #3b82f6;
+  --op-to: #2459d6;
+  --op-text: #ffffff;
+
+  --clear-bg: rgba(249, 115, 22, 0.13);
+  --clear-bg-hover: rgba(249, 115, 22, 0.22);
+  --clear-border: rgba(251, 146, 60, 0.35);
+  --clear-text: #fdba74;
+
+  --eq-from: #fcd34d;
+  --eq-to: #f59e0b;
+  --eq-text: #1f1504;
+
+  --toggle-on: #a78bfa;
+  --error: #fb7185;
+
+  /* Ukuran */
+  --radius-xl: 28px;
+  --radius-key: 14px;
+  --key-h: 60px;
+  --gap: 10px;
+  --result-size: 3.4rem;
+
+  --font-ui: "Inter", "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 16px;
+  font-family: var(--font-ui);
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #14213d 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #1b1440 0%, transparent 55%),
+    var(--bg);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Orb dekoratif ---------- */
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+.orb-1 { width: 380px; height: 380px; background: #2563eb; top: 8%; left: 12%; }
+.orb-2 { width: 320px; height: 320px; background: #7c3aed; bottom: 6%; right: 10%; }
+.orb-3 { width: 220px; height: 220px; background: #f59e0b; bottom: 30%; left: 30%; opacity: 0.18; }
+
+/* ---------- Kartu kalkulator ---------- */
+.calculator {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 760px);
+  padding: 22px;
+  border-radius: var(--radius-xl);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 var(--glass-highlight);
+  overflow: hidden;
+}
+
+/* ---------- Header ---------- */
+.calc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-logo {
+  display: grid;
+  place-items: center;
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  box-shadow: 0 6px 18px -6px rgba(99, 102, 241, 0.8);
+}
+.brand h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+.brand p { font-size: 0.75rem; color: var(--text-dim); }
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, 0.09); color: var(--text); }
+.icon-btn:active { transform: scale(0.94); }
+.icon-btn.small { width: 32px; height: 32px; border-radius: 9px; }
+.icon-btn[aria-expanded="true"] { color: #93c5fd; border-color: rgba(147, 197, 253, 0.4); }
+
+/* ---------- Display ---------- */
+.display {
+  position: relative;
+  min-height: 150px;
+  padding: 14px 20px 16px;
+  margin-bottom: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.28));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  overflow: hidden;
+}
+.display::before {               /* kilau kaca halus */
+  content: "";
+  position: absolute;
+  inset: 0 0 55% 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
+  pointer-events: none;
+}
+
+.status-bar {
+  position: absolute;
+  top: 12px; left: 16px;
+  display: flex;
+  gap: 6px;
+}
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.badge-inv { color: var(--toggle-on); border-color: rgba(167, 139, 250, 0.4); }
+.badge-mem { color: #fcd34d; border-color: rgba(252, 211, 77, 0.35); }
+.badge[hidden] { display: none; }
+
+.expression {
+  min-height: 1.6em;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  text-align: right;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding-top: 26px;
+}
+.expression::-webkit-scrollbar { display: none; }
+.expression .ghost { color: var(--text-faint); opacity: 0.6; }
+.expression .caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: #60a5fa;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.result {
+  font-family: var(--font-mono);
+  font-size: var(--result-size);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  transition: color 0.2s, opacity 0.2s;
+}
+.result.is-preview { color: var(--text-dim); opacity: 0.85; }
+.result.is-final { animation: pop 0.25s ease-out; }
+.result.is-error { color: var(--error); font-size: 1.6rem; animation: shake 0.35s; }
+
+@keyframes pop {
+  0% { transform: translateY(6px); opacity: 0.4; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.segmented button {
+  font: 600 0.78rem var(--font-mono);
+  letter-spacing: 0.05em;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.segmented button.active {
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.3), rgba(59, 130, 246, 0.2));
+  color: #dbeafe;
+  box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.35);
+}
+.memory-row { display: flex; gap: 6px; }
+.mem-btn {
+  font: 600 0.78rem var(--font-mono);
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fcd34d;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.mem-btn:hover { background: rgba(252, 211, 77, 0.1); }
+.mem-btn:active { transform: scale(0.94); }
+
+/* ---------- Keypad ---------- */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--gap);
+}
+/* Pemisah visual antara blok fungsi (4 kolom) dan blok angka */
+.keypad > .key:nth-child(8n + 5) { margin-left: 8px; }
+
+.key {
+  position: relative;
+  overflow: hidden;
+  height: var(--key-h);
+  border-radius: var(--radius-key);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  display: block;
+  padding: 0 4px;
+  text-align: center;
+  white-space: nowrap;
+  line-height: calc(var(--key-h) - 2px);   /* teks + superskrip tetap satu baris & di tengah */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 10px -4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.09s ease, background 0.2s, box-shadow 0.2s, filter 0.2s;
+}
+.key sup { font-size: 0.62em; margin-left: 1px; line-height: 0; vertical-align: 0.7em; }
+.key svg { vertical-align: middle; }
+.key:hover { filter: brightness(1.12); }
+.key:active,
+.key.pressed {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.key:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+
+.key-num  { background: var(--num-bg); color: var(--num-text); font-size: 1.3rem; }
+.key-num:hover { background: var(--num-bg-hover); }
+
+.key-fn {
+  background: var(--fn-bg);
+  color: var(--fn-text);
+  border-color: var(--fn-border);
+  font-size: 0.98rem;
+}
+.key-fn:hover { background: var(--fn-bg-hover); }
+
+.key-op {
+  background: linear-gradient(180deg, var(--op-from), var(--op-to));
+  color: var(--op-text);
+  font-size: 1.4rem;
+  border-color: rgba(147, 197, 253, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 16px -6px rgba(37, 99, 235, 0.8);
+}
+
+.key-clear {
+  background: var(--clear-bg);
+  color: var(--clear-text);
+  border-color: var(--clear-border);
+  font-weight: 600;
+}
+.key-clear:hover { background: var(--clear-bg-hover); }
+
+.key-equals {
+  background: linear-gradient(180deg, var(--eq-from), var(--eq-to));
+  color: var(--eq-text);
+  font-size: 1.6rem;
+  font-weight: 700;
+  border-color: rgba(253, 230, 138, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 22px -6px rgba(245, 158, 11, 0.75);
+}
+
+.key-toggle {
+  background: rgba(167, 139, 250, 0.08);
+  color: #c4b5fd;
+  border-color: rgba(167, 139, 250, 0.25);
+  font-weight: 600;
+}
+.keypad.inv .key-toggle {
+  background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(196, 181, 253, 0.5), 0 6px 18px -6px rgba(139, 92, 246, 0.9);
+}
+
+/* Label tombol 2nd */
+.key .lbl-inv { display: none; }
+.keypad.inv .key .lbl { display: none; }
+.keypad.inv .key .lbl-inv { display: inline; color: #ddd6fe; }
+
+/* Efek ripple */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(0);
+  animation: ripple 0.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+
+/* ---------- Panel riwayat ---------- */
+.history-panel {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: min(340px, 88%);
+  padding: 20px;
+  background: linear-gradient(180deg, #111829, #0b101c);
+  border-left: 1px solid var(--glass-border);
+  box-shadow: -20px 0 40px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(105%);
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 5;
+}
+.history-panel.open { transform: translateX(0); }
+.history-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.history-head h2 { font-size: 1rem; font-weight: 600; }
+.history-actions { display: flex; align-items: center; gap: 8px; }
+.text-btn {
+  font: 500 0.78rem var(--font-ui);
+  color: var(--clear-text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+.text-btn:hover { background: var(--clear-bg); }
+
+.history-list {
+  list-style: none;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.history-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: right;
+  font-family: var(--font-mono);
+}
+.history-item button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px;
+  overflow-wrap: anywhere;
+}
+.history-item button:hover { background: rgba(255, 255, 255, 0.06); }
+.history-item .h-expr { color: var(--text-dim); font-size: 0.85rem; }
+.history-item .h-res  { color: var(--text); font-size: 1.15rem; font-weight: 500; }
+.history-empty { color: var(--text-faint); font-size: 0.9rem; text-align: center; margin-top: 30px; }
+.history-tip { margin-top: 12px; font-size: 0.72rem; color: var(--text-faint); }
+
+/* ---------- Hint keyboard ---------- */
+.hint {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  text-align: center;
+  line-height: 2;
+}
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+}
+
+/* ---------- Responsif ---------- */
+@media (max-width: 640px) {
+  :root { --key-h: 50px; --gap: 6px; --result-size: 2.5rem; --radius-key: 11px; }
+  body { padding: 12px 8px; justify-content: flex-start; }
+  .calculator { padding: 14px; border-radius: 22px; }
+  .keypad > .key:nth-child(8n + 5) { margin-left: 4px; }
+  .key { font-size: 0.82rem; }
+  .key-num { font-size: 1.1rem; }
+  .key-op { font-size: 1.2rem; }
+  .mem-btn { padding: 6px 9px; }
+  .hint { display: none; }
+}
+@media (max-width: 400px) {
+  :root { --key-h: 44px; --gap: 5px; }
+  .key { font-size: 0.72rem; border-radius: 9px; }
+  .key-num { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+</style>
+</head>
+<body>
+  <!-- Latar dekoratif (agar efek kaca terlihat) -->
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+  <div class="bg-orb orb-3" aria-hidden="true"></div>
+
+  <main class="calculator" id="calculator">
+    <!-- ===== Header ===== -->
+    <header class="calc-header">
+      <div class="brand">
+        <span class="brand-logo">∑</span>
+        <div>
+          <h1>SciCalc</h1>
+          <p>Scientific Calculator · v1.0</p>
+        </div>
+      </div>
+      <button class="icon-btn" id="historyToggle" type="button" aria-label="Tampilkan riwayat" aria-expanded="false" title="Riwayat (H)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+          <path d="M3 3v5h5" />
+          <path d="M12 7v5l3 2" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- ===== Display ===== -->
+    <section class="display" aria-live="polite">
+      <div class="status-bar">
+        <span class="badge badge-angle" id="angleBadge">DEG</span>
+        <span class="badge badge-inv" id="invBadge" hidden>2nd</span>
+        <span class="badge badge-mem" id="memBadge" hidden>M</span>
+      </div>
+      <div class="expression" id="expression"></div>
+      <div class="result" id="result">0</div>
+    </section>
+
+    <!-- ===== Toolbar: mode sudut & memori ===== -->
+    <section class="toolbar">
+      <div class="segmented" role="group" aria-label="Mode sudut">
+        <button type="button" data-angle="DEG" class="active">DEG</button>
+        <button type="button" data-angle="RAD">RAD</button>
+      </div>
+      <div class="memory-row">
+        <button type="button" class="mem-btn" data-mem="MC" title="Hapus memori">MC</button>
+        <button type="button" class="mem-btn" data-mem="MR" title="Panggil memori">MR</button>
+        <button type="button" class="mem-btn" data-mem="M+" title="Tambah ke memori">M+</button>
+        <button type="button" class="mem-btn" data-mem="M-" title="Kurangi dari memori">M−</button>
+      </div>
+    </section>
+
+    <!-- ===== Keypad (8 kolom x 5 baris) ===== -->
+    <section class="keypad" id="keypad">
+      <!-- Baris 1 -->
+      <button type="button" class="key key-toggle" data-type="action" data-action="inverse" data-key="i" title="Fungsi kedua / invers (I)">2nd</button>
+      <button type="button" class="key key-fn" data-type="func" data-value="sin(" data-value-inv="sin⁻¹(" data-key="s">
+        <span class="lbl">sin</span><span class="lbl-inv">sin<sup>−1</sup></span>
+      </button>
+      <button type="button" class="key key-fn" data-type="func" data-value="cos(" data-value-inv="cos⁻¹(" data-key="c">
+        <span class="lbl">cos</span><span class="lbl-inv">cos<sup>−1</sup></span>
+      </button>
+      <button type="button" class="key key-fn" data-type="func" data-value="tan(" data-value-inv="tan⁻¹(" data-key="t">
+        <span class="lbl">tan</span><span class="lbl-inv">tan<sup>−1</sup></span>
+      </button>
+      <button type="button" class="key key-clear" data-type="action" data-action="clear" data-key="Escape Delete" title="Hapus semua (Esc)">AC</button>
+      <button type="button" class="key key-clear" data-type="action" data-action="delete" data-key="Backspace" title="Hapus satu (Backspace)">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="DEL">
+          <path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z" /><path d="m17 9-6 6M11 9l6 6" />
+        </svg>
+      </button>
+      <button type="button" class="key key-op" data-type="post" data-value="%" data-key="%">%</button>
+      <button type="button" class="key key-op" data-type="op" data-value="÷" data-key="/">÷</button>
+
+      <!-- Baris 2 -->
+      <button type="button" class="key key-fn" data-type="post" data-value="²" data-key="q" title="Kuadrat (Q)">x<sup>2</sup></button>
+      <button type="button" class="key key-fn" data-type="op" data-value="^" data-key="^" title="Pangkat (^)">x<sup>y</sup></button>
+      <button type="button" class="key key-fn" data-type="func" data-value="√(" data-key="r" title="Akar kuadrat (R)">√x</button>
+      <button type="button" class="key key-fn" data-type="op" data-value="ⁿ√" title="Akar pangkat n: n ⁿ√ x (contoh 3ⁿ√27 = 3)"><sup>n</sup>√x</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="7" data-key="7">7</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="8" data-key="8">8</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="9" data-key="9">9</button>
+      <button type="button" class="key key-op" data-type="op" data-value="×" data-key="* x">×</button>
+
+      <!-- Baris 3 -->
+      <button type="button" class="key key-fn" data-type="func" data-value="e^(" title="e pangkat x">e<sup>x</sup></button>
+      <button type="button" class="key key-fn" data-type="func" data-value="ln(" data-key="l" title="Logaritma natural (L)">ln</button>
+      <button type="button" class="key key-fn" data-type="func" data-value="log(" data-key="g" title="Logaritma basis 10 (G)">log</button>
+      <button type="button" class="key key-fn" data-type="func" data-value="10^(" title="10 pangkat x">10<sup>x</sup></button>
+      <button type="button" class="key key-num" data-type="digit" data-value="4" data-key="4">4</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="5" data-key="5">5</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="6" data-key="6">6</button>
+      <button type="button" class="key key-op" data-type="op" data-value="−" data-key="-">−</button>
+
+      <!-- Baris 4 -->
+      <button type="button" class="key key-fn" data-type="post" data-value="!" data-key="!" title="Faktorial (!)">x!</button>
+      <button type="button" class="key key-fn" data-type="post" data-value="⁻¹" title="Kebalikan (1/x)">1/x</button>
+      <button type="button" class="key key-fn" data-type="const" data-value="π" data-key="p" title="Pi (P)">π</button>
+      <button type="button" class="key key-fn" data-type="const" data-value="e" data-key="e" title="Bilangan Euler (E)">e</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="1" data-key="1">1</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="2" data-key="2">2</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="3" data-key="3">3</button>
+      <button type="button" class="key key-op" data-type="op" data-value="+" data-key="+">+</button>
+
+      <!-- Baris 5 -->
+      <button type="button" class="key key-fn" data-type="paren" data-value="(" data-key="(">(</button>
+      <button type="button" class="key key-fn" data-type="paren" data-value=")" data-key=")">)</button>
+      <button type="button" class="key key-fn" data-type="const" data-value="Ans" data-key="a" title="Hasil terakhir (A)">Ans</button>
+      <button type="button" class="key key-fn" data-type="op" data-value="mod" data-key="m" title="Sisa bagi (M)">mod</button>
+      <button type="button" class="key key-num" data-type="action" data-action="sign" data-key="n" title="Ubah tanda (N)">±</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="0" data-key="0">0</button>
+      <button type="button" class="key key-num" data-type="digit" data-value="." data-key=". ,">.</button>
+      <button type="button" class="key key-equals" data-type="action" data-action="equals" data-key="Enter =" title="Hitung (Enter)">=</button>
+    </section>
+
+    <!-- ===== Panel Riwayat ===== -->
+    <aside class="history-panel" id="historyPanel" aria-hidden="true">
+      <div class="history-head">
+        <h2>Riwayat</h2>
+        <div class="history-actions">
+          <button type="button" class="text-btn" id="historyClear">Hapus semua</button>
+          <button type="button" class="icon-btn small" id="historyClose" aria-label="Tutup riwayat">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+      </div>
+      <ul class="history-list" id="historyList"></ul>
+      <p class="history-tip">Klik ekspresi untuk menyunting ulang, klik hasil untuk menyisipkannya.</p>
+    </aside>
+  </main>
+
+  <p class="hint">
+    Keyboard: <kbd>0–9</kbd> <kbd>+ − * /</kbd> <kbd>^</kbd> <kbd>( )</kbd> <kbd>Enter</kbd> hitung ·
+    <kbd>Backspace</kbd> hapus · <kbd>Esc</kbd> reset · <kbd>S</kbd>/<kbd>C</kbd>/<kbd>T</kbd> trig ·
+    <kbd>I</kbd> 2nd · <kbd>D</kbd> DEG/RAD · <kbd>H</kbd> riwayat
+  </p>
+
+  <script>
+/* =========================================================
+   SciCalc — Scientific Calculator (Vanilla JS)
+   ---------------------------------------------------------
+   Struktur:
+   1. State & referensi elemen
+   2. Mesin matematika (tokenizer + parser recursive-descent)
+      -> TIDAK memakai eval(), sehingga aman & error terkontrol
+   3. Format angka
+   4. Logika input (tombol & keyboard)
+   5. Memori, riwayat, mode sudut
+   6. Render tampilan & efek visual
+   ========================================================= */
+
+'use strict';
+
+/* =========================================================
+   1. STATE & ELEMEN
+   ========================================================= */
+const state = {
+  expr: '',            // ekspresi yang sedang diketik
+  angleMode: 'DEG',    // 'DEG' | 'RAD'
+  inverse: false,      // tombol 2nd aktif
+  memory: 0,
+  ans: 0,              // hasil terakhir
+  justEvaluated: false,
+  history: [],         // [{ expr, raw }]
+  lastPreview: '0',
+};
+
+const els = {
+  expression: document.getElementById('expression'),
+  result: document.getElementById('result'),
+  angleBadge: document.getElementById('angleBadge'),
+  invBadge: document.getElementById('invBadge'),
+  memBadge: document.getElementById('memBadge'),
+  keypad: document.getElementById('keypad'),
+  historyPanel: document.getElementById('historyPanel'),
+  historyList: document.getElementById('historyList'),
+  historyToggle: document.getElementById('historyToggle'),
+  historyClose: document.getElementById('historyClose'),
+  historyClear: document.getElementById('historyClear'),
+};
+
+const STORAGE_KEY = 'scicalc.v1';
+const MAX_HISTORY = 50;
+
+/* =========================================================
+   2. MESIN MATEMATIKA
+   ========================================================= */
+
+/** Error khusus kalkulator (pesannya aman ditampilkan ke pengguna). */
+class CalcError extends Error {}
+
+const FUNCTIONS = ['sin⁻¹', 'cos⁻¹', 'tan⁻¹', 'sin', 'cos', 'tan', 'ln', 'log'];
+const BINARY_OPS = ['mod', 'ⁿ√', '+', '−', '×', '÷', '^'];
+
+/** Ubah string ekspresi menjadi daftar token. */
+function tokenize(src) {
+  const tokens = [];
+  let i = 0;
+
+  while (i < src.length) {
+    const ch = src[i];
+
+    if (ch === ' ') { i++; continue; }
+
+    // Angka (termasuk desimal & notasi ilmiah 1.5E+20)
+    if (/[0-9.]/.test(ch)) {
+      let j = i;
+      while (j < src.length && /[0-9.]/.test(src[j])) j++;
+      const mantissa = src.slice(i, j);
+      if (mantissa === '.' || (mantissa.match(/\./g) || []).length > 1) {
+        throw new CalcError('Format angka tidak valid');
+      }
+      if (src[j] === 'E') {
+        let k = j + 1;
+        if ('+-−'.includes(src[k])) k++;
+        let m = k;
+        while (m < src.length && /[0-9]/.test(src[m])) m++;
+        if (m === k) throw new CalcError('Format angka tidak valid');
+        j = m;
+      }
+      tokens.push({ type: 'num', value: parseFloat(src.slice(i, j).replace('−', '-')) });
+      i = j;
+      continue;
+    }
+
+    const fn = FUNCTIONS.find((f) => src.startsWith(f, i));
+    if (fn) { tokens.push({ type: 'func', value: fn }); i += fn.length; continue; }
+
+    if (src.startsWith('Ans', i)) { tokens.push({ type: 'const', value: 'Ans' }); i += 3; continue; }
+    if (src.startsWith('mod', i)) { tokens.push({ type: 'op', value: 'mod' }); i += 3; continue; }
+    if (src.startsWith('ⁿ√', i))  { tokens.push({ type: 'op', value: 'ⁿ√' }); i += 2; continue; }
+    if (src.startsWith('⁻¹', i))  { tokens.push({ type: 'post', value: '⁻¹' }); i += 2; continue; }
+
+    if (ch === 'π' || ch === 'e') { tokens.push({ type: 'const', value: ch }); i++; continue; }
+
+    if ('+−-×*÷/^'.includes(ch)) {
+      const map = { '-': '−', '*': '×', '/': '÷' };
+      tokens.push({ type: 'op', value: map[ch] || ch });
+      i++;
+      continue;
+    }
+    if ('!²%'.includes(ch)) { tokens.push({ type: 'post', value: ch }); i++; continue; }
+    if (ch === '√') { tokens.push({ type: 'sqrt' }); i++; continue; }
+    if (ch === '(' || ch === ')') { tokens.push({ type: 'paren', value: ch }); i++; continue; }
+
+    throw new CalcError(`Karakter tidak dikenal: "${ch}"`);
+  }
+  return tokens;
+}
+
+/* ---------- Fungsi matematika dengan validasi domain ---------- */
+
+const snap = (v) => (Math.abs(v) < 1e-12 ? 0 : v);   // bersihkan galat floating kecil (mis. sin π)
+
+function toRadians(x, mode) { return mode === 'DEG' ? (x * Math.PI) / 180 : x; }
+function fromRadians(x, mode) { return mode === 'DEG' ? (x * 180) / Math.PI : x; }
+
+function applyFunc(name, x, mode) {
+  switch (name) {
+    case 'sin':
+      if (mode === 'DEG' && x % 180 === 0) return 0;
+      return snap(Math.sin(toRadians(x, mode)));
+    case 'cos':
+      if (mode === 'DEG' && (x - 90) % 180 === 0) return 0;
+      return snap(Math.cos(toRadians(x, mode)));
+    case 'tan': {
+      if (mode === 'DEG') {
+        if (x % 180 === 0) return 0;
+        if ((x - 90) % 180 === 0) throw new CalcError('tan tidak terdefinisi pada sudut ini');
+      } else if (Math.abs(Math.cos(x)) < 1e-12) {
+        throw new CalcError('tan tidak terdefinisi pada sudut ini');
+      }
+      return snap(Math.tan(toRadians(x, mode)));
+    }
+    case 'sin⁻¹':
+      if (x < -1 || x > 1) throw new CalcError('sin⁻¹ hanya untuk −1 ≤ x ≤ 1');
+      return fromRadians(Math.asin(x), mode);
+    case 'cos⁻¹':
+      if (x < -1 || x > 1) throw new CalcError('cos⁻¹ hanya untuk −1 ≤ x ≤ 1');
+      return fromRadians(Math.acos(x), mode);
+    case 'tan⁻¹':
+      return fromRadians(Math.atan(x), mode);
+    case 'ln':
+      if (x <= 0) throw new CalcError('ln hanya untuk x > 0');
+      return Math.log(x);
+    case 'log':
+      if (x <= 0) throw new CalcError('log hanya untuk x > 0');
+      return Math.log10(x);
+    default:
+      throw new CalcError(`Fungsi tidak dikenal: ${name}`);
+  }
+}
+
+function factorial(n) {
+  if (n < 0 || !Number.isInteger(n)) throw new CalcError('Faktorial hanya untuk bilangan bulat ≥ 0');
+  if (n > 170) throw new CalcError('Hasil terlalu besar');
+  let r = 1;
+  for (let k = 2; k <= n; k++) r *= k;
+  return r;
+}
+
+function power(a, b) {
+  if (a === 0 && b < 0) throw new CalcError('Tidak bisa dibagi nol');
+  const r = Math.pow(a, b);
+  if (Number.isNaN(r)) throw new CalcError('Hasil bukan bilangan real');
+  return r;
+}
+
+function nthRoot(x, n) {
+  if (n === 0) throw new CalcError('Indeks akar tidak boleh nol');
+  if (x < 0) {
+    if (Number.isInteger(n) && Math.abs(n) % 2 === 1) return -Math.pow(-x, 1 / n);
+    throw new CalcError('Akar genap dari bilangan negatif tidak real');
+  }
+  return Math.pow(x, 1 / n);
+}
+
+function applyBinary(op, a, b) {
+  switch (op) {
+    case '×': return a * b;
+    case '÷':
+      if (b === 0) throw new CalcError('Tidak bisa dibagi nol');
+      return a / b;
+    case 'mod':
+      if (b === 0) throw new CalcError('Tidak bisa mod dengan nol');
+      return a - b * Math.floor(a / b);
+    default: throw new CalcError('Operator tidak valid');
+  }
+}
+
+/**
+ * Parser recursive-descent. Urutan prioritas (rendah → tinggi):
+ *   expression : term (('+' | '−') term)*
+ *   term       : unary (('×' | '÷' | 'mod') unary | perkalian implisit)*
+ *   unary      : ('−' | '+') unary | power
+ *   power      : postfix (('^' | 'ⁿ√') unary)?        (asosiatif kanan)
+ *   postfix    : primary ('!' | '²' | '⁻¹' | '%')*
+ *   primary    : angka | konstanta | fungsi arg | √ arg | '(' expression ')'
+ * Setiap node mengembalikan { v: nilai, pct: apakah berakhiran % }.
+ */
+function parse(tokens, ctx) {
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const next = () => tokens[pos++];
+  const isOp = (t, ...vals) => t && t.type === 'op' && vals.includes(t.value);
+  const startsPrimary = (t) =>
+    t && (['num', 'const', 'func', 'sqrt'].includes(t.type) || (t.type === 'paren' && t.value === '('));
+
+  function expression() {
+    let left = term();
+    while (isOp(peek(), '+', '−')) {
+      const op = next().value;
+      const right = term();
+      // Persen gaya kalkulator: 200 + 10% = 220
+      const r = right.pct ? left.v * right.v : right.v;
+      left = { v: op === '+' ? left.v + r : left.v - r, pct: false };
+    }
+    return left;
+  }
+
+  function term() {
+    let left = unary();
+    for (;;) {
+      const t = peek();
+      if (isOp(t, '×', '÷', 'mod')) {
+        next();
+        const right = unary();
+        left = { v: applyBinary(t.value, left.v, right.v), pct: false };
+      } else if (startsPrimary(t)) {
+        const right = unary();                         // perkalian implisit: 2π, 3(4), 2sin(30)
+        left = { v: left.v * right.v, pct: false };
+      } else {
+        break;
+      }
+    }
+    return left;
+  }
+
+  function unary() {
+    const t = peek();
+    if (isOp(t, '−', '+')) {
+      next();
+      const operand = unary();
+      return { v: t.value === '−' ? -operand.v : operand.v, pct: operand.pct };
+    }
+    return powerExpr();
+  }
+
+  function powerExpr() {
+    const base = postfix();
+    const t = peek();
+    if (isOp(t, '^', 'ⁿ√')) {
+      next();
+      const rhs = unary();
+      if (t.value === '^') return { v: power(base.v, rhs.v), pct: false };
+      return { v: nthRoot(rhs.v, base.v), pct: false };  // n ⁿ√ x
+    }
+    return base;
+  }
+
+  function postfix() {
+    let node = primary();
+    while (peek() && peek().type === 'post') {
+      const op = next().value;
+      if (op === '!') node = { v: factorial(node.v), pct: false };
+      else if (op === '²') node = { v: node.v * node.v, pct: false };
+      else if (op === '⁻¹') {
+        if (node.v === 0) throw new CalcError('Tidak bisa dibagi nol');
+        node = { v: 1 / node.v, pct: false };
+      } else if (op === '%') node = { v: node.v / 100, pct: true };
+    }
+    return node;
+  }
+
+  // Argumen fungsi: "(…)" atau langsung nilai (mis. √9, sin30)
+  function argument() {
+    const t = peek();
+    if (!t) throw new CalcError('Ekspresi belum lengkap');
+    return t.type === 'paren' && t.value === '(' ? primary().v : unary().v;
+  }
+
+  function primary() {
+    const t = next();
+    if (!t) throw new CalcError('Ekspresi belum lengkap');
+
+    switch (t.type) {
+      case 'num':
+        return { v: t.value, pct: false };
+      case 'const':
+        if (t.value === 'π') return { v: Math.PI, pct: false };
+        if (t.value === 'e') return { v: Math.E, pct: false };
+        return { v: ctx.ans, pct: false };
+      case 'paren': {
+        if (t.value !== '(') throw new CalcError('Kurung tidak seimbang');
+        if (peek() && peek().type === 'paren' && peek().value === ')') {
+          throw new CalcError('Kurung kosong');
+        }
+        const inner = expression();
+        const close = next();
+        if (!close || close.type !== 'paren' || close.value !== ')') {
+          throw new CalcError('Kurung tidak seimbang');
+        }
+        return { v: inner.v, pct: false };
+      }
+      case 'sqrt': {
+        const a = argument();
+        if (a < 0) throw new CalcError('Akar dari bilangan negatif tidak real');
+        return { v: Math.sqrt(a), pct: false };
+      }
+      case 'func':
+        return { v: applyFunc(t.value, argument(), ctx.angleMode), pct: false };
+      default:
+        throw new CalcError('Sintaks tidak valid');
+    }
+  }
+
+  const result = expression();
+  if (pos < tokens.length) {
+    const t = tokens[pos];
+    throw new CalcError(t.type === 'paren' ? 'Kurung tidak seimbang' : 'Sintaks tidak valid');
+  }
+  return result.v;
+}
+
+/** Evaluasi ekspresi lengkap (menutup kurung yang belum ditutup secara otomatis). */
+function balanceParens(expr) {
+  const open = (expr.match(/\(/g) || []).length;
+  const close = (expr.match(/\)/g) || []).length;
+  return expr + ')'.repeat(Math.max(0, open - close));
+}
+
+function evaluateExpression(expr) {
+  const tokens = tokenize(balanceParens(expr));
+  if (tokens.length === 0) return 0;
+
+  const v = parse(tokens, { ans: state.ans, angleMode: state.angleMode });
+  if (Number.isNaN(v)) throw new CalcError('Hasil tidak terdefinisi');
+  if (!Number.isFinite(v)) throw new CalcError('Hasil terlalu besar');
+  return v;
+}
+
+/* =========================================================
+   3. FORMAT ANGKA
+   ========================================================= */
+
+/** Representasi mentah (bisa dipakai lagi di ekspresi). */
+function toRaw(v) {
+  if (Object.is(v, -0)) v = 0;
+  const abs = Math.abs(v);
+  if (abs !== 0 && (abs >= 1e15 || abs < 1e-6)) {
+    return v.toExponential(10).replace(/\.?0+e/, 'e').replace('e', 'E');
+  }
+  return String(parseFloat(v.toPrecision(15)));
+}
+
+/** Representasi tampilan (dengan pemisah ribuan & tanda minus tipografis). */
+function toDisplay(raw) {
+  if (raw.includes('E')) return raw.replace('-', '−');
+  const negative = raw.startsWith('-');
+  const [intPart, decPart] = raw.replace('-', '').split('.');
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (negative ? '−' : '') + grouped + (decPart !== undefined ? '.' + decPart : '');
+}
+
+/** Nilai yang disisipkan ke ekspresi (negatif dibungkus kurung agar aman: (−3)²). */
+function toExprValue(v) {
+  const raw = toRaw(v).replace(/-/g, '−');
+  return raw.startsWith('−') ? `(${raw})` : raw;
+}
+
+/* =========================================================
+   4. LOGIKA INPUT
+   ========================================================= */
+
+const endsWithBinaryOp = (s) => BINARY_OPS.find((o) => s.endsWith(o));
+const endsWithValue = (s) => /([\d.)πe²!%¹]|Ans)$/.test(s);
+
+function appendDigit(d) {
+  const tail = state.expr.match(/[\d.]*$/)[0];
+  if (d === '.') {
+    if (tail.includes('.')) return;
+    if (tail === '') d = '0.';
+  } else if (tail === '0') {
+    state.expr = state.expr.slice(0, -1);   // hindari "007"
+  }
+  state.expr += d;
+}
+
+function appendOperator(op) {
+  if (!state.expr) {
+    state.expr = op === '−' ? '−' : '0' + op;
+    return;
+  }
+  if (state.expr.endsWith('(')) {
+    if (op === '−') state.expr += op;       // izinkan "(−"
+    return;
+  }
+  const last = endsWithBinaryOp(state.expr);
+  if (last) {
+    // izinkan bilangan negatif setelah ×, ÷, ^, mod, ⁿ√  → contoh 5×−3
+    if (op === '−' && last !== '+' && last !== '−') { state.expr += op; return; }
+    // ganti operator sebelumnya
+    let l;
+    while ((l = endsWithBinaryOp(state.expr))) state.expr = state.expr.slice(0, -l.length);
+    if (!state.expr || state.expr.endsWith('(')) {
+      if (op === '−') state.expr += op;
+      return;
+    }
+  }
+  state.expr += op;
+}
+
+function canCloseParen() {
+  const open = (state.expr.match(/\(/g) || []).length;
+  const close = (state.expr.match(/\)/g) || []).length;
+  return open > close && endsWithValue(state.expr);
+}
+
+/** Masukan dari tombol non-aksi. */
+function input(type, value) {
+  if (state.justEvaluated) {
+    // Angka/fungsi baru → mulai ekspresi baru; operator → lanjutkan dari hasil
+    if (['digit', 'func', 'const'].includes(type) || (type === 'paren' && value === '(')) {
+      state.expr = '';
+    }
+    state.justEvaluated = false;
+  }
+
+  switch (type) {
+    case 'digit':
+      appendDigit(value);
+      break;
+    case 'op':
+      appendOperator(value);
+      break;
+    case 'post':
+      if (!endsWithValue(state.expr)) return invalidInput();
+      state.expr += value;
+      break;
+    case 'func':
+    case 'const':
+      state.expr += value;
+      break;
+    case 'paren':
+      if (value === ')' && !canCloseParen()) return invalidInput();
+      state.expr += value;
+      break;
+    default:
+      return;
+  }
+  render();
+}
+
+const DELETE_TOKENS = [
+  'sin⁻¹(', 'cos⁻¹(', 'tan⁻¹(', 'sin(', 'cos(', 'tan(', 'log(', 'ln(',
+  'e^(', '10^(', '√(', 'Ans', 'mod', 'ⁿ√', '⁻¹',
+];
+
+const actions = {
+  clear() {
+    state.expr = '';
+    state.justEvaluated = false;
+    state.lastPreview = '0';
+    render();
+  },
+
+  delete() {
+    if (state.justEvaluated) { actions.clear(); return; }
+    const tok = DELETE_TOKENS.find((t) => state.expr.endsWith(t));
+    state.expr = state.expr.slice(0, tok ? -tok.length : -1);
+    render();
+  },
+
+  equals() {
+    if (!state.expr || state.justEvaluated) return;
+    try {
+      const v = evaluateExpression(state.expr);
+      const raw = toRaw(v);
+      const shownExpr = balanceParens(state.expr);
+      addHistory(shownExpr, raw);
+
+      state.ans = v;
+      state.expr = toExprValue(v);
+      state.justEvaluated = true;
+      state.lastPreview = '0';
+
+      renderExpression(shownExpr + ' =', { caret: false });
+      setResult(toDisplay(raw), 'final');
+      saveState();
+    } catch (err) {
+      showError(err);
+    }
+  },
+
+  sign() {
+    state.justEvaluated = false;
+    const NUM = '(\\d+\\.?\\d*(?:E[+−-]?\\d+)?|\\.\\d+|π|e|Ans)';
+    const wrapped = state.expr.match(new RegExp(`\\(−${NUM}\\)$`));
+    if (wrapped) {
+      state.expr = state.expr.slice(0, -wrapped[0].length) + wrapped[1];
+    } else {
+      const m = state.expr.match(new RegExp(`${NUM}$`));
+      if (m) {
+        state.expr = state.expr.slice(0, -m[0].length) + `(−${m[1]})`;
+      } else if (!state.expr || endsWithBinaryOp(state.expr) || state.expr.endsWith('(')) {
+        appendOperator('−');
+      } else {
+        return invalidInput();
+      }
+    }
+    render();
+  },
+
+  inverse() {
+    setInverse(!state.inverse);
+  },
+};
+
+function handleKey(btn) {
+  const { type, value, valueInv, action } = btn.dataset;
+  if (type === 'action') {
+    actions[action]?.();
+    return;
+  }
+  let v = value;
+  if (state.inverse && valueInv) {
+    v = valueInv;
+    setInverse(false);             // 2nd bersifat sekali pakai, seperti kalkulator fisik
+  }
+  input(type, v);
+}
+
+function setInverse(on) {
+  state.inverse = on;
+  els.keypad.classList.toggle('inv', on);
+  els.invBadge.hidden = !on;
+}
+
+/* =========================================================
+   5. MEMORI, RIWAYAT, MODE SUDUT
+   ========================================================= */
+
+/** Nilai saat ini untuk operasi memori. */
+function currentValue() {
+  if (state.justEvaluated) return state.ans;
+  if (!state.expr) return 0;
+  try {
+    return evaluateExpression(state.expr);
+  } catch (err) {
+    showError(err);
+    return null;
+  }
+}
+
+function handleMemory(cmd) {
+  switch (cmd) {
+    case 'MC':
+      state.memory = 0;
+      break;
+    case 'MR':
+      input('const', toExprValue(state.memory));
+      break;
+    case 'M+':
+    case 'M-': {
+      const v = currentValue();
+      if (v === null) return;
+      state.memory = cmd === 'M+' ? state.memory + v : state.memory - v;
+      if (Math.abs(state.memory) < 1e-12) state.memory = 0;
+      break;
+    }
+  }
+  updateBadges();
+  saveState();
+}
+
+function addHistory(expr, raw) {
+  state.history.unshift({ expr, raw });
+  if (state.history.length > MAX_HISTORY) state.history.length = MAX_HISTORY;
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = els.historyList;
+  list.replaceChildren();
+  if (state.history.length === 0) {
+    const empty = document.createElement('li');
+    empty.className = 'history-empty';
+    empty.textContent = 'Belum ada riwayat perhitungan.';
+    list.append(empty);
+    return;
+  }
+  state.history.forEach((item) => {
+    const li = document.createElement('li');
+    li.className = 'history-item';
+
+    const exprBtn = document.createElement('button');
+    exprBtn.type = 'button';
+    exprBtn.className = 'h-expr';
+    exprBtn.textContent = item.expr + ' =';
+    exprBtn.title = 'Sunting ulang ekspresi ini';
+    exprBtn.addEventListener('click', () => {
+      state.expr = item.expr;
+      state.justEvaluated = false;
+      toggleHistory(false);
+      render();
+    });
+
+    const resBtn = document.createElement('button');
+    resBtn.type = 'button';
+    resBtn.className = 'h-res';
+    resBtn.textContent = toDisplay(item.raw);
+    resBtn.title = 'Sisipkan hasil ini';
+    resBtn.addEventListener('click', () => {
+      input('const', toExprValue(parseFloat(item.raw)));
+      toggleHistory(false);
+    });
+
+    li.append(exprBtn, resBtn);
+    list.append(li);
+  });
+}
+
+function toggleHistory(force) {
+  const open = typeof force === 'boolean' ? force : !els.historyPanel.classList.contains('open');
+  els.historyPanel.classList.toggle('open', open);
+  els.historyPanel.setAttribute('aria-hidden', String(!open));
+  els.historyToggle.setAttribute('aria-expanded', String(open));
+}
+
+function setAngleMode(mode) {
+  state.angleMode = mode;
+  document.querySelectorAll('.segmented button').forEach((b) => {
+    b.classList.toggle('active', b.dataset.angle === mode);
+  });
+  updateBadges();
+  if (!state.justEvaluated) render();
+  saveState();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      angleMode: state.angleMode,
+      memory: state.memory,
+      ans: state.ans,
+      history: state.history,
+    }));
+  } catch { /* localStorage tidak tersedia — abaikan */ }
+}
+
+function loadState() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (!data) return;
+    if (data.angleMode === 'RAD' || data.angleMode === 'DEG') state.angleMode = data.angleMode;
+    if (Number.isFinite(data.memory)) state.memory = data.memory;
+    if (Number.isFinite(data.ans)) state.ans = data.ans;
+    if (Array.isArray(data.history)) state.history = data.history.slice(0, MAX_HISTORY);
+  } catch { /* data rusak — mulai dari awal */ }
+}
+
+/* =========================================================
+   6. RENDER & EFEK VISUAL
+   ========================================================= */
+
+function renderExpression(text, { caret = true, ghost = '' } = {}) {
+  const el = els.expression;
+  el.replaceChildren(document.createTextNode(text.replace(/mod/g, ' mod ')));
+  if (ghost) {
+    const g = document.createElement('span');
+    g.className = 'ghost';
+    g.textContent = ghost;
+    el.append(g);
+  }
+  if (caret) {
+    const c = document.createElement('span');
+    c.className = 'caret';
+    el.append(c);
+  }
+  el.scrollLeft = el.scrollWidth;
+}
+
+function setResult(text, mode) {
+  const el = els.result;
+  el.textContent = text;
+  el.classList.remove('is-preview', 'is-final', 'is-error');
+  void el.offsetWidth;                         // restart animasi
+  el.classList.add(`is-${mode}`);
+
+  // Kecilkan font otomatis untuk angka panjang
+  const len = text.length;
+  el.style.fontSize = mode !== 'error' && len > 11
+    ? `calc(var(--result-size) * ${Math.max(0.42, 11 / len).toFixed(3)})`
+    : '';
+}
+
+function showError(err) {
+  const msg = err instanceof CalcError ? err.message : 'Terjadi kesalahan';
+  if (!(err instanceof CalcError)) console.error(err);
+  state.justEvaluated = false;
+  setResult(msg, 'error');
+}
+
+/** Render ulang saat mengetik: ekspresi + pratinjau hasil langsung. */
+function render() {
+  const open = (state.expr.match(/\(/g) || []).length;
+  const close = (state.expr.match(/\)/g) || []).length;
+  renderExpression(state.expr, { caret: true, ghost: ')'.repeat(Math.max(0, open - close)) });
+
+  if (!state.expr) {
+    state.lastPreview = '0';
+  } else {
+    try {
+      state.lastPreview = toDisplay(toRaw(evaluateExpression(state.expr)));
+    } catch {
+      /* ekspresi belum lengkap — tetap tampilkan pratinjau terakhir yang valid */
+    }
+  }
+  setResult(state.lastPreview, 'preview');
+}
+
+function updateBadges() {
+  els.angleBadge.textContent = state.angleMode;
+  els.memBadge.hidden = state.memory === 0;
+  els.memBadge.textContent = `M = ${toDisplay(toRaw(state.memory))}`;
+}
+
+function invalidInput() {
+  els.expression.animate(
+    [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' },
+     { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }],
+    { duration: 220 }
+  );
+}
+
+function spawnRipple(btn, x, y) {
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  r.style.width = r.style.height = `${size}px`;
+  r.style.left = `${(x ?? rect.left + rect.width / 2) - rect.left - size / 2}px`;
+  r.style.top = `${(y ?? rect.top + rect.height / 2) - rect.top - size / 2}px`;
+  btn.append(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+
+function flashKey(btn) {
+  btn.classList.add('pressed');
+  spawnRipple(btn);
+  setTimeout(() => btn.classList.remove('pressed'), 120);
+}
+
+/* =========================================================
+   7. EVENT LISTENER
+   ========================================================= */
+
+// Klik tombol keypad
+els.keypad.addEventListener('pointerdown', (e) => {
+  const btn = e.target.closest('.key');
+  if (btn) spawnRipple(btn, e.clientX, e.clientY);
+});
+els.keypad.addEventListener('click', (e) => {
+  const btn = e.target.closest('.key');
+  if (btn) handleKey(btn);
+});
+
+// Mode sudut & memori
+document.querySelectorAll('.segmented button').forEach((b) => {
+  b.addEventListener('click', () => setAngleMode(b.dataset.angle));
+});
+document.querySelectorAll('.mem-btn').forEach((b) => {
+  b.addEventListener('click', () => handleMemory(b.dataset.mem));
+});
+
+// Riwayat
+els.historyToggle.addEventListener('click', () => toggleHistory());
+els.historyClose.addEventListener('click', () => toggleHistory(false));
+els.historyClear.addEventListener('click', () => {
+  state.history = [];
+  renderHistory();
+  saveState();
+});
+
+// Keyboard
+const keyMap = new Map();
+document.querySelectorAll('.key[data-key]').forEach((btn) => {
+  btn.dataset.key.split(' ').forEach((k) => keyMap.set(k, btn));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+
+  if (key === 'd') { setAngleMode(state.angleMode === 'DEG' ? 'RAD' : 'DEG'); return; }
+  if (key === 'h') { toggleHistory(); return; }
+  if (key === 'Escape' && els.historyPanel.classList.contains('open')) { toggleHistory(false); return; }
+
+  const btn = keyMap.get(key);
+  if (!btn) return;
+  e.preventDefault();               // cegah "/" membuka quick-find & Enter menekan tombol fokus
+  flashKey(btn);
+  handleKey(btn);
+});
+
+/* =========================================================
+   8. INISIALISASI
+   ========================================================= */
+loadState();
+setAngleMode(state.angleMode);
+updateBadges();
+renderHistory();
+render();
+
+// Ekspor untuk pengujian di console (opsional)
+window.SciCalc = { evaluate: evaluateExpression, state };
+</script>
+</body>
+</html>
